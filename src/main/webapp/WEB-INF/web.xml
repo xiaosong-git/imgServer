@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:jsp="http://java.sun.com/xml/ns/javaee/jsp" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
+  <display-name></display-name>
+  <context-param>
+    <param-name>log4jConfigLocation</param-name>
+    <param-value>classpath:log4j.properties</param-value>
+  </context-param>
+  <listener>
+    <listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+  </listener>
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:applicationContext*.xml</param-value>
+  </context-param>
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+  <filter>
+    <filter-name>encodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+      <param-name>encoding</param-name>
+      <param-value>utf-8</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>encodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  
+   <servlet>
+	    <servlet-name>startupServer</servlet-name>
+	    <servlet-class>com.xdream.kernel.StartupServer</servlet-class>
+	    <init-param>
+	      <param-name>isLoadSql</param-name>
+	      <param-value>false</param-value>
+        </init-param>
+	    <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet>
+	    <servlet-name>springMVC</servlet-name>
+	    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+	    <init-param>
+	      <param-name>contextConfigLocation</param-name>
+	      <param-value>classpath:mvc.xml</param-value>
+	    </init-param>
+	    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+	    <servlet-name>springMVC</servlet-name>
+	    <url-pattern>/</url-pattern><!-- *.do -->
+  </servlet-mapping>
+  
+  
+  <servlet>  
+    <servlet-name>Kaptcha</servlet-name>  
+    <servlet-class>com.google.code.kaptcha.servlet.KaptchaServlet</servlet-class>  
+    <init-param>  
+        <param-name>kaptcha.border</param-name>    <!-- 是否有边框 -->  
+        <param-value>no</param-value>  
+    </init-param>  
+    <init-param>  
+        <param-name>kaptcha.image.width</param-name>    <!-- 宽 -->  
+        <param-value>100</param-value>  
+    </init-param>
+    <init-param>  
+        <param-name>kaptcha.image.height</param-name>    <!-- 高 -->  
+        <param-value>36</param-value>  
+    </init-param>
+    <init-param>  
+        <param-name>kaptcha.textproducer.font.size</param-name>    <!-- 字体大小 -->  
+        <param-value>28</param-value>  
+    </init-param>
+    <init-param>  
+        <param-name>kaptcha.textproducer.char.space</param-name>   <!--字符之间的间距 -->  
+        <param-value>2</param-value>  
+    </init-param> 
+    <!--字体样式 --> 
+    <!-- <init-param>  
+        <param-name>kaptcha.textproducer.font.names</param-name>    
+        <param-value>宋体,楷体,微软雅黑</param-value>  
+    </init-param> --> 
+    <init-param>  
+        <param-name>kaptcha.textproducer.char.length</param-name>   <!-- 字符的个数 -->  
+        <param-value>4</param-value>  
+    </init-param>    
+  </servlet>  
+  
+  <servlet-mapping>  
+    <servlet-name>Kaptcha</servlet-name>  
+    <url-pattern>/Kaptcha.jpg</url-pattern>  
+  </servlet-mapping>
+   
+  
+  
+  
+    
+    <error-page>
+		<error-code>404</error-code>
+		<location>/html/404.html</location>
+	</error-page>
+  
+  <jsp-config>
+    <taglib>
+		<taglib-uri>/WEB-INF/lib/tld/c.tld</taglib-uri>
+		<taglib-location>/WEB-INF/lib/tld/c.tld</taglib-location>
+	</taglib>
+    <taglib>
+      <taglib-uri>JstlFunction</taglib-uri>
+      <taglib-location>/WEB-INF/lib/tld/JstlFunction.tld</taglib-location>
+    </taglib>
+  </jsp-config>
+  <session-config>
+    <session-timeout>30</session-timeout>
+  </session-config>
+  <welcome-file-list>
+    <welcome-file>/system/login/loginInit.do</welcome-file>
+  </welcome-file-list>
+</web-app>

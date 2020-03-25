@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="GB2312"?>
+<appConf>
+  <!--
+		*******************************
+		**********全局变量 ************
+		*******************************
+   -->
+   <property name="SERVER" value="tomcat"/><!-- websphere,tomcat -->
+   
+   <property name="isDebug" value="yes"/>
+  <!--
+		*******************************
+		***********服务器*************
+		*******************************
+   -->
+   <server current="true" name="main" text="初始化" class="com.xdream.goldccm.third.ThirdServer"/>      
+   <!-- <server current="false" name="test" text="test" class="com.xdream.test.TestServerProp">
+      <property name="ip" value="127.0.0.1"/>
+	  <property name="port" value="50"/>
+   </server> -->
+   <!--
+		*******************************
+		***********后台服务***********
+		*******************************
+	-->
+	<!-- <backend name="test1" text="test1" class="com.xdream.test.TestBackend" port="10003">
+	    <property name="ip" value="127.0.0.2"/>
+	  <property name="port" value="50"/>
+	</backend> -->
+
+	<!--
+		*******************************
+		********** 服务配置 ************
+		*******************************
+	-->
+	<!-- <service name="test" text="测试" class="test2"/> -->
+
+</appConf>

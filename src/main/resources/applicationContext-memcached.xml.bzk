@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+						http://www.springframework.org/schema/context  
+               			http://www.springframework.org/schema/context/spring-context-3.2.xsd
+						http://www.springframework.org/schema/tx 
+    					http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+						http://www.springframework.org/schema/aop
+	       				http://www.springframework.org/schema/aop/spring-aop-3.2.xsd" 
+	default-autowire="byName">
+
+	<!-- spymemcached 配置 -->
+	<bean id="memcachedClient" class="net.spy.memcached.spring.MemcachedClientFactoryBean">
+		<!-- memcached服务地址，以空格或逗号间隔 <property name="servers" value="host1:11211,host2:11211,host3:11211"/> -->
+		<property name="servers" value="127.0.0.1:11211" />
+		<!-- memcache协议 默认是TEXT -->
+		<property name="protocol" value="BINARY" />
+		<!-- 设置默认的转码器(默认以net.spy.memcached.transcoders.SerializingTranscoder) -->
+		<property name="transcoder">
+			<bean class="net.spy.memcached.transcoders.SerializingTranscoder">
+				<property name="compressionThreshold" value="1024" />
+			</bean>
+		</property>
+		<!-- 以毫秒为单位设置默认的操作超时时间,默认2.5s -->
+		<property name="opTimeout" value="2000" />
+		<!-- 设置最大的连接延迟,单位秒 -->
+		<property name="maxReconnectDelay" value="15" />
+		<!-- 设置超时次数上限是1998次，默认是DEFAULT_MAX_TIMEOUTEXCEPTION_THRESHOLD，即998次 -->
+		<property name="timeoutExceptionThreshold" value="1998" />
+		<!-- 设置哈希算法(见net.spy.memcached.HashAlgorithm的值) -->
+		<property name="hashAlg">
+			<value type="net.spy.memcached.DefaultHashAlgorithm">KETAMA_HASH</value>
+		</property>
+		<!-- 设置定位器类型(ARRAY_MOD,CONSISTENT),默认是ARRAY_MOD -->
+		<property name="locatorType" value="ARRAY_MOD" />
+		<!-- 设置故障模式(取消，重新分配，重试)，默认是重新分配 -->
+		<!-- <property name="failureMode" value="Redistribute"/> -->
+		<!-- 是否使用Nagle算法 -->
+		<property name="useNagleAlgorithm" value="true" />
+		<!-- 如果默认操作优化是不可取的，设置为false(默认为true) -->
+		<!-- <property name="shouldOptimize" value="true"/> -->
+	</bean>
+	
+	<!-- 分布式缓存，使用memcached -->
+	<!-- 最大值为24×3600×30，即30天，超过后则失效时间为马上 -->
+	<bean id="systemCache" class="com.xdream.kernel.cache.MemClient" scope="singleton"> 
+		<constructor-arg index="0" ref="memcachedClient"></constructor-arg>
+		<property  name="expireTime" value="0" /> 
+	</bean>	
+</beans>
