@@ -46,22 +46,23 @@ public class ThirdServer extends ServerSupport{
 //		System.load(this.getClass().getClassLoader().getResource("DB40/FreeImage.dll").getPath());
 		/**load face windows
 		 */
-//		System.load(DB40Config.DB40Dir+"/FreeImage.dll");
-//        System.load(DB40Config.DB40Dir+"/HJFacePos.dll");
-//        System.load(DB40Config.DB40Dir+"/HJFaceDetect.dll");
-//        System.load(DB40Config.DB40Dir+"/HJFaceIdentify.dll");
-//		System.load(DB40Config.DB40Dir+"/HJFaceEngine.dll");
-//		System.load(DB40Config.DB40Dir+"/JavaJNI.dll");
+		System.load(DB40Config.DB40Dir+"/FreeImage.dll");
+        System.load(DB40Config.DB40Dir+"/HJFacePos.dll");
+        System.load(DB40Config.DB40Dir+"/HJFaceDetect.dll");
+        System.load(DB40Config.DB40Dir+"/HJFaceIdentify.dll");
+		System.load(DB40Config.DB40Dir+"/HJFaceEngine.dll");
+		System.load(DB40Config.DB40Dir+"/JavaJNI.dll");
 		/**load face linux
 		 */
-		System.load(DB40Config.DB40Dir+"/libJavaJNI.so");
-		System.load(DB40Config.DB40Dir+"/libHJFacePos.so");
-		System.load(DB40Config.DB40Dir+"/libHJFaceDetect.so");
-		System.load(DB40Config.DB40Dir+"/libHJFaceIdentify.so");
-		System.load(DB40Config.DB40Dir+"/libHJFaceEngine.so");
+//		System.load(DB40Config.DB40Dir+"/libJavaJNI.so");
+//		System.load(DB40Config.DB40Dir+"/libHJFacePos.so");
+//		System.load(DB40Config.DB40Dir+"/libHJFaceDetect.so");
+//		System.load(DB40Config.DB40Dir+"/libHJFaceIdentify.so");
+//		System.load(DB40Config.DB40Dir+"/libHJFaceEngine.so");
 
 		System.out.println("HJ faceEngine end");
-		FaceModuleUtil.initDetectEngine(1, 30, Constant.TEMPLATE_ROLL_ANGL, 75);
+		System.out.println("eyeCross：70，rollAngl：35，confidence：80");
+		FaceModuleUtil.initDetectEngine(1, 45, Constant.TEMPLATE_ROLL_ANGL, 80);
 		FaceModuleUtil.initFeatureEngine(1);
 
 

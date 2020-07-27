@@ -6,18 +6,20 @@ import com.hj.jni.bean.HJFaceFeature;
 import com.hj.jni.bean.HJFaceModel;
 import com.hj.jni.itf.*;
 import com.hj.jni.utils.*;
+import org.apache.commons.codec.binary.Base64;
 import sun.misc.BASE64Decoder;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.image.*;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -302,6 +304,72 @@ public class FaceModuleUtil {
                 }
                 int result = hjFaceDrive.HJDetectFace(engineId, img, 24, sourceImg.getWidth(), sourceImg.getHeight(), faceNum, hjFaceModels);
                 faceDetectEngineList.add(engineId);
+
+                if (result!=0){
+                    HJFaceModel hjFaceModel = hjFaceModels.get(0);
+                    int rightEyeX = hjFaceModel.getRightEyeX();
+                    int leftEyeX = hjFaceModel.getLeftEyeX();
+                    int i = rightEyeX - leftEyeX;
+                    retMsg.setResult_code(i-45);
+                    System.out.println("眼间距为："+i);
+                    return retMsg;
+
+                }else {
+                    System.out.println("result=0");
+                }
+                retMsg.setResult_code(result);
+                retMsg.setResult_desc(Constant.resultCodeMap.get(result));
+            } else {
+                retMsg.setResult_code(-101);
+                retMsg.setResult_desc(Constant.resultCodeMap.get(-101));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            retMsg.setResult_code(500);
+            retMsg.setContent(e.getMessage());
+            if(!faceDetectEngineList.contains(engineId)){
+                faceDetectEngineList.add(engineId);
+            }
+        }
+        return retMsg;
+    }
+    /**
+     * 检测人脸，并生成模型
+     *
+     * @param base64Str base64格式图片
+     * @param faceNum   期望人脸数量
+     */
+    public static RetMsg buildFaceModel(String base64Str, int faceNum,String path,String fileName) throws Exception {
+        RetMsg retMsg = new RetMsg();
+        Long engineId = getDetectEngineId(0);
+        try {
+            if (engineId != null && engineId != 0l) {
+                BufferedImage sourceImg = GetBufferedImage(base64Str);
+
+                byte[] img = getMatrixBGR(sourceImg);//图片转化BGR格式
+                ArrayList<HJFaceModel> hjFaceModels = new ArrayList<HJFaceModel>();
+                for (int i = 0; i < faceNum; i++) {
+                    hjFaceModels.add(new HJFaceModel());
+                }
+                int result = hjFaceDrive.HJDetectFace(engineId, img, 24, sourceImg.getWidth(), sourceImg.getHeight(), faceNum, hjFaceModels);
+                faceDetectEngineList.add(engineId);
+
+                if (result!=0&&result!=-2){
+                    HJFaceModel hjFaceModel = hjFaceModels.get(0);
+                    int rightEyeX = hjFaceModel.getRightEyeX();
+                    int leftEyeX = hjFaceModel.getLeftEyeX();
+                    int i = rightEyeX - leftEyeX;
+                    retMsg.setResult_code(i-45);
+                    System.out.println("眼间距为："+i+"，图片为："+fileName);
+                    String s = cutFacePic2Base64(hjFaceModel, base64Str);
+                    BASE64Decoder decoder = new BASE64Decoder();
+                    byte[] bytes1 = decoder.decodeBuffer(s);
+                    FilesUtils.getFileFromBytes(bytes1, path,fileName);
+                    return retMsg;
+
+                }else {
+                    System.out.println("result=0");
+                }
                 retMsg.setResult_code(result);
                 retMsg.setResult_desc(Constant.resultCodeMap.get(result));
             } else {
@@ -609,6 +677,35 @@ public class FaceModuleUtil {
         return stream;
 
     }
+    /**
+     * 裁剪图片中的人脸,并转为base64编码
+     */
+    private static String cutFacePic2Base64(HJFaceModel hjFaceModel, String originPic) {
+        String formatName = "JPEG";
+        String[] imgData = originPic.split(",");
+        String base64Img = imgData[imgData.length - 1];
+        if (imgData.length > 1) {
+            formatName = imgData[0].split("/")[1].split(";")[0];
+        }
+        Iterator<ImageReader> it = ImageIO.getImageReadersByFormatName(formatName);
+        ImageReader reader = it.next();
+        InputStream is = BaseToInputStream(base64Img);
+        try {
+            ImageInputStream iis = ImageIO.createImageInputStream(is);
+            reader.setInput(iis, true);
+            ImageReadParam param = reader.getDefaultReadParam();
+            Rectangle rect = new Rectangle(hjFaceModel.getLeft()-50, hjFaceModel.getTop()-40<=0?hjFaceModel.getTop():hjFaceModel.getTop()-40, hjFaceModel.getRight() - hjFaceModel.getLeft()+100, hjFaceModel.getBottom() - hjFaceModel.getTop()+100);
+            param.setSourceRegion(rect);
+            BufferedImage bi = reader.read(0, param);
+            // bufferImage->base64
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ImageIO.write(bi, formatName, outputStream);
+            base64Img = Base64.encodeBase64String(outputStream.toByteArray());
+        } catch (IOException e) {
+            e.printStackTrace();
 
+        }
+        return base64Img;
+    }
 
 }

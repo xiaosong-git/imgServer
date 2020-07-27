@@ -1,16 +1,22 @@
 package com.xdream.goldccm.service.file.impl;
 
+import com.hj.biz.bean.RetMsg;
 import com.xdream.goldccm.service.file.IFileService;
 import com.xdream.goldccm.third.FileConfig;
+import com.xdream.goldccm.third.ImageConfig;
 import com.xdream.goldccm.util.DateUtil;
+import com.xdream.goldccm.util.FaceModuleUtil;
+import com.xdream.goldccm.util.FilesUtils;
 import com.xdream.goldccm.util.ParamDef;
 import com.xdream.kernel.util.ResponseUtil;
 import com.xdream.uaas.dao.base.IMyBaseDao;
+import com.xdream.uaas.model.compose.TableList;
 import com.xdream.uaas.service.base.impl.MyBaseServiceImpl;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -19,7 +25,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -34,7 +47,8 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
 
     @Autowired
     private IMyBaseDao baseDao;
-
+    @Autowired
+    public JdbcTemplate jdbcTemplate;
     private static Logger logger= Logger.getLogger(IFileServiceImpl.class);
     /**
      * 下载txt文件
@@ -281,6 +295,91 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
         System.out.println(newFileName);
         System.out.println("上传成功");
     }
+
+    @Override
+    public void findFileUnqualified() throws Exception {
+        long start = System.currentTimeMillis();
+//        List<Map<String, Object>> list = findList("select id,idHandleImgUrl  ", " from " + TableList.USER + " where idHandleImgUrl is not null and idHandleImgUrl<>'' and isAuth='T' and idHandleImgUrl<>'user/headImg/z192.png' ");
+//        List<Map<String, Object>> list = findList("select id,idHandleImgUrl  ", " from " + TableList.USER + " where failReason between '55' and '60' ");
+        List<Map<String, Object>> list = findList("select id,idHandleImgUrl  ", " from " + TableList.USER +" where id <100");
+        String pic64_1;
+        RetMsg retMsg;
+//        StringBuffer str = new StringBuffer("(");
+        String inPath = null;
+        List maplist = new LinkedList<>();
+        for (Map<String, Object> map : list) {
+            try {
+                String idHandleImgUrl = map.get("idHandleImgUrl").toString();
+                inPath = ImageConfig.imageSaveDir + idHandleImgUrl;
+                pic64_1 = FilesUtils.ImageToBase64ByLocal(inPath);
+
+                retMsg = FaceModuleUtil.buildFaceModel(pic64_1, 1,ImageConfig.imageSaveDir+"照片间距/",idHandleImgUrl.substring(idHandleImgUrl.lastIndexOf("/")+1));
+//                FaceModuleUtil.cutFacePic2Base64(HJFaceModel hjFaceModel, String originPic)
+//                if (retMsg.getResult_code() < 0) {
+                    maplist.add(new Object[]{retMsg.getResult_code() + 60, map.get("id")});
+//                        String newFileName="id："+map.get("id")+"眼间距："+(retMsg.getResult_code() + 60)+"_"+idHandleImgUrl.substring(idHandleImgUrl.lastIndexOf("/")+1);
+
+//                        FilesUtils.nioCopy(inPath,ImageConfig.imageSaveDir+"照片间距/"+newFileName);
+//                    str.append(map.get("id")).append(",");
+//                }
+            } catch (Exception e) {
+                logger.error("图片地址错误：{}", e);
+                logger.info(inPath);
+            }
+        }
+        int count=0;
+//        if(list.size()>0){
+//            str.deleteCharAt(str.length() - 1);
+//            str.append(")");
+//            String s = String.valueOf(str);
+//            System.out.println(s);
+//        }
+        if (maplist.size() > 1) {
+//            str.deleteCharAt(str.length() - 1);
+//            str.append(")");
+//            String s = String.valueOf(str);
+//            System.out.println(s);
+            String sql = "update " + TableList.USER + " set failReason=? where id=?";
+
+            int[] ints = jdbcTemplate.batchUpdate(sql, maplist);
+            count= ints[0];
+//            int update = deleteOrUpdate("update " + TableList.USER + " set failReason='眼间距小于60',isAuth='F' where id in" + s);
+//					logger.debug("pic64_1:\n" + pic64_1);}
+            //创建人脸模型
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("耗时"+(end-start));
+        logger.info(count);
+    }
+    @Override
+    public void test(){
+        String pic64_1;
+        RetMsg retMsg = null;
+//        StringBuffer str = new StringBuffer("(");
+        String inPath = null;
+        Path path= Paths.get(ImageConfig.imageSaveDir+"下发失败图片");
+        //第二个参数必须用"*"开头，第二个参数是非必输的
+        try (DirectoryStream<Path> entries= Files.newDirectoryStream(path)){
+            for (Path entity:entries){
+                System.out.println(entity.getFileName());
+                inPath = ImageConfig.imageSaveDir + "下发失败图片/"+entity.getFileName();
+                pic64_1 = FilesUtils.ImageToBase64ByLocal(inPath);
+                retMsg = FaceModuleUtil.buildFaceModel(pic64_1, 1);
+                if((retMsg.getResult_code() + 60)>=54&&(retMsg.getResult_code() + 60)<60){
+                String s = entity.getFileName() + "间距" + (retMsg.getResult_code() + 60)+".jpg";
+
+                FilesUtils.nioCopy(inPath,ImageConfig.imageSaveDir+"照片间距1/"+s);
+                }
+            }
+        }catch (Exception e){
+        e.printStackTrace();
+        }
+    }
+
+
+
+
+//    }
 
 //    /**
 //     * 下载文件

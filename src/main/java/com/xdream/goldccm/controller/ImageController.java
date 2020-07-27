@@ -431,7 +431,7 @@ public class ImageController {
 					//创建人脸模型
 					RetMsg retMsg = FaceModuleUtil.buildFaceModel(pic64_1,1);
 //					logger.info("result_code:" + retMsg.getResult_code());
-
+					//TODO 将人脸进行裁剪 裁剪成功后存数据库字段
             		//调用人像识别，判断是否符合
 					if( retMsg.getResult_code()>0&&retMsg.getResult_code()!=500){
 						base.setSign("success");
@@ -442,7 +442,7 @@ public class ImageController {
 						//失败移除文件
 					}else {
 						base.setSign("fail");
-						base.setDesc("人脸识别失败，请重新提交人脸图片");
+						base.setDesc("请再靠近些");
 						obj.setVerify(base);
 						data.setImageFileName(realFileName);
 						obj.setData(data);
