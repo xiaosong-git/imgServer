@@ -50,7 +50,7 @@ public class ThirdServer extends ServerSupport{
 		if (osName.contains("Linux")) {
 			System.out.println(osName);
 			System.load(DB40Config.DB40Dir+"/libJavaJNI.so");
-			System.load(DB40Config.DB40Dir+"/libHJFacePos.so");
+//			System.load(DB40Config.DB40Dir+"/libHJFacePos.so");
 //			System.load(DB40Config.DB40Dir+"/libHJFaceDetect.so");
 //			System.load(DB40Config.DB40Dir+"/libHJFaceIdentify.so");
 //			System.load(DB40Config.DB40Dir+"/libHJFaceEngine.so");
