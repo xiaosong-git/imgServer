@@ -1,6 +1,6 @@
 package com.xdream.goldccm.controller;
 
-import com.hj.biz.bean.RetMsg;
+import com.hj.jni.bean.HJFaceModel;
 import com.xdream.JsonUtils;
 import com.xdream.goldccm.service.IBankCardDiscernService;
 import com.xdream.goldccm.service.IPictureService;
@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.util.Iterator;
+import java.util.List;
 
 @SuppressWarnings("serial")
 @Controller
@@ -423,17 +424,24 @@ public class ImageController {
 				//人脸图片
 				if("3".equals(type)){
 					System.out.println("进入人脸图片........");
+
 					//获取文件路径
 					logger.info("文件路径:"+ImageConfig.imageSaveDir+realFileName);
 					// 将图片文件转化为字节数组字符串，并对其进行Base64编码处理
 					String pic64_1 = FilesUtils.ImageToBase64ByLocal(ImageConfig.imageSaveDir+realFileName);
-//					logger.debug("pic64_1:\n" + pic64_1);
-					//创建人脸模型
-					RetMsg retMsg = FaceModuleUtil.buildFaceModel(pic64_1,1);
-//					logger.info("result_code:" + retMsg.getResult_code());
-					//TODO 将人脸进行裁剪 裁剪成功后存数据库字段
-            		//调用人像识别，判断是否符合
-					if( retMsg.getResult_code()>0&&retMsg.getResult_code()!=500){
+                    RetMsg retMsg = FaceModuleUtil.genHjFaceModule(pic64_1);
+//					//TODO 将人脸进行裁剪 裁剪成功后存数据库字段
+					Object content = retMsg.getContent();
+					if(content !=null){
+						List<HJFaceModel> hjface=(List<HJFaceModel>)content;
+						if(hjface.size()>0){
+							int leftEyeX = hjface.get(0).getLeftEyeX();
+							int rightEyeX = hjface.get(0).getRightEyeX();
+							logger.info(realFileName+"——人脸眼间距为："+(rightEyeX-leftEyeX));
+						}
+					}
+//            		//调用人像识别，判断是否符合
+					if( retMsg.getResult_code()==0){
 						base.setSign("success");
 						base.setDesc("提交成功");
 						obj.setVerify(base);
@@ -441,13 +449,14 @@ public class ImageController {
 						obj.setData(data);
 						//失败移除文件
 					}else {
+						logger.info(userId+"提交人脸失败原因："+retMsg.getResult_desc());
 						base.setSign("fail");
-						base.setDesc("请再靠近些");
+						base.setDesc(retMsg.getResult_desc());
 						obj.setVerify(base);
-						data.setImageFileName(realFileName);
+						data.setImageFileName(null);
 						obj.setData(data);
 //						files.delete();
-						logger.info("删除非人像："+realFileName);
+//						logger.info("删除非人像："+realFileName);
 					}
 
 				}
@@ -478,5 +487,5 @@ public class ImageController {
 		}
 
 	}
-     
+
 }

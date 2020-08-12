@@ -1,6 +1,5 @@
 package com.xdream.goldccm.third;
 
-import com.hj.jni.itf.Constant;
 import com.xdream.goldccm.util.FaceModuleUtil;
 import com.xdream.goldccm.util.ParamDef;
 import com.xdream.kernel.ServerSupport;
@@ -44,14 +43,31 @@ public class ThirdServer extends ServerSupport{
 
 		System.out.println("HJ faceEngine start");
 //		System.load(this.getClass().getClassLoader().getResource("DB40/FreeImage.dll").getPath());
-		/**load face windows
-		 */
-		System.load(DB40Config.DB40Dir+"/FreeImage.dll");
-        System.load(DB40Config.DB40Dir+"/HJFacePos.dll");
-        System.load(DB40Config.DB40Dir+"/HJFaceDetect.dll");
-        System.load(DB40Config.DB40Dir+"/HJFaceIdentify.dll");
-		System.load(DB40Config.DB40Dir+"/HJFaceEngine.dll");
-		System.load(DB40Config.DB40Dir+"/JavaJNI.dll");
+		String osName = System.getProperty("os.name");
+		try {
+			System.out.println(osName);
+
+		if (osName.contains("Linux")) {
+			System.out.println(osName);
+			System.load(DB40Config.DB40Dir+"/libJavaJNI.so");
+			System.load(DB40Config.DB40Dir+"/libHJFacePos.so");
+//			System.load(DB40Config.DB40Dir+"/libHJFaceDetect.so");
+//			System.load(DB40Config.DB40Dir+"/libHJFaceIdentify.so");
+//			System.load(DB40Config.DB40Dir+"/libHJFaceEngine.so");
+
+		}else{
+			System.load(DB40Config.DB40Dir + "/FreeImage.dll");
+			System.load(DB40Config.DB40Dir + "/HJFacePos.dll");
+			System.load(DB40Config.DB40Dir + "/HJFaceDetect.dll");
+			System.load(DB40Config.DB40Dir + "/HJFaceIdentify.dll");
+			System.load(DB40Config.DB40Dir + "/HJFaceLive.dll");
+			System.load(DB40Config.DB40Dir + "/HJFaceEngine.dll");
+			System.load(DB40Config.DB40Dir + "/JavaJNI.dll");
+		}
+		FaceModuleUtil.initEngine(1);
+		}catch (Throwable e){
+			e.printStackTrace();
+		}
 		/**load face linux
 		 */
 //		System.load(DB40Config.DB40Dir+"/libJavaJNI.so");
@@ -61,9 +77,11 @@ public class ThirdServer extends ServerSupport{
 //		System.load(DB40Config.DB40Dir+"/libHJFaceEngine.so");
 
 		System.out.println("HJ faceEngine end");
-		System.out.println("eyeCross：70，rollAngl：35，confidence：80");
-		FaceModuleUtil.initDetectEngine(1, 45, Constant.TEMPLATE_ROLL_ANGL, 80);
-		FaceModuleUtil.initFeatureEngine(1);
+//		FaceModuleUtil.initEngine(1);
+		System.out.println("HJ faceEngine init");
+//		System.out.println("eyeCross：70，rollAngl：35，confidence：80");
+//		FaceModuleUtil.initDetectEngine(1, 45, Constant.TEMPLATE_ROLL_ANGL, 80);
+//		FaceModuleUtil.initFeatureEngine(1);
 
 
 	}
@@ -71,6 +89,6 @@ public class ThirdServer extends ServerSupport{
 	@Override
 	public void doStop() throws Exception {
 		//System.out.println("bbbbbbbbbbbbbbb");
-		
+
 	}
 }

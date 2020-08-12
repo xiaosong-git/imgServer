@@ -64,8 +64,8 @@ public interface IFileService extends IMyBaseService {
      * @throws Exception
      */
     void copyFile(String Path, MultipartFile myfile, String userId, String originalFilename) throws Exception;
-
-    void findFileUnqualified() throws Exception;
-
-    void test();
+//
+//    void findFileUnqualified() throws Exception;
+//
+//    void test();
 }

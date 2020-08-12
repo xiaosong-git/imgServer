@@ -41,20 +41,25 @@ public class FileController {
           fileService.response(response,code);
     }
 
-    @RequestMapping(value = "/findFileUnqualified")
-    public void findFileUnqualified(HttpServletResponse response)
-            throws Exception {
-//        System.out.println("--------文件服务器");
-        fileService.findFileUnqualified();
-        //登入验证+文件分类 code=0 成功 1失败
-        fileService.response(response,1);
-    }
-    @RequestMapping(value = "/test")
-    public void test(HttpServletResponse response)
-            throws Exception {
-//        System.out.println("--------文件服务器");
-        fileService.test();
-        //登入验证+文件分类 code=0 成功 1失败
-        fileService.response(response,1);
-    }
+//    @RequestMapping(value = "/findFileUnqualified")
+//    public void findFileUnqualified(HttpServletResponse response)
+//            throws Exception {
+////        System.out.println("--------文件服务器");
+//        fileService.findFileUnqualified();
+//        //登入验证+文件分类 code=0 成功 1失败
+//        fileService.response(response,1);
+//    }
+//    @RequestMapping(value = "/test")
+//    public void test(HttpServletResponse response)
+//            throws Exception {
+////        System.out.println("--------文件服务器");
+////        fileService.test();
+////        //登入验证+文件分类 code=0 成功 1失败
+////        fileService.response(response,1);
+//
+//        fileService.response(response,1);
+//    }
+
+
+
 }

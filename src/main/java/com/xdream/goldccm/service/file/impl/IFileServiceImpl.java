@@ -1,16 +1,11 @@
 package com.xdream.goldccm.service.file.impl;
 
-import com.hj.biz.bean.RetMsg;
 import com.xdream.goldccm.service.file.IFileService;
 import com.xdream.goldccm.third.FileConfig;
-import com.xdream.goldccm.third.ImageConfig;
 import com.xdream.goldccm.util.DateUtil;
-import com.xdream.goldccm.util.FaceModuleUtil;
-import com.xdream.goldccm.util.FilesUtils;
 import com.xdream.goldccm.util.ParamDef;
 import com.xdream.kernel.util.ResponseUtil;
 import com.xdream.uaas.dao.base.IMyBaseDao;
-import com.xdream.uaas.model.compose.TableList;
 import com.xdream.uaas.service.base.impl.MyBaseServiceImpl;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -25,14 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -49,9 +37,11 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
     private IMyBaseDao baseDao;
     @Autowired
     public JdbcTemplate jdbcTemplate;
-    private static Logger logger= Logger.getLogger(IFileServiceImpl.class);
+    private static Logger logger = Logger.getLogger(IFileServiceImpl.class);
+
     /**
      * 下载txt文件
+     *
      * @param request
      * @return java.lang.String
      * @throws Exception
@@ -75,11 +65,11 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
                     if (!file.exists()) {
                         file.mkdirs();
                     }
-                    File files = new File(realPath, systemTimeFourteen+"_"+originalFilename);
+                    File files = new File(realPath, systemTimeFourteen + "_" + originalFilename);
                     // 这里不必处理IO流关闭的问题，因为FileUtils.copyInputStreamToFile()方法内部会自动把用到的IO流关掉
                     FileUtils.copyInputStreamToFile(
                             myfile.getInputStream(), files);
-                    System.out.println("路径：" + files.getAbsolutePath()+"上传成功");
+                    System.out.println("路径：" + files.getAbsolutePath() + "上传成功");
                     return files.getAbsolutePath();
                 }
             }
@@ -91,27 +81,28 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
      * 文件下发
      * update by cwf  2019/8/26 11:34
      */
+    @Override
     public void sendFile(String path, String filename, HttpServletResponse response) throws Exception {
         //否则直接使用response.setHeader("content-disposition", "attachment;filename=" + filename);即可
         response.setHeader("content-disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
         InputStream in = null;
         OutputStream out = null;
         try {
-        in = new FileInputStream(path); //获取文件的流
-        int len = 0;
-        //缓存作用
-        byte buf[] = new byte[1024];
-        //输出流
-        out = response.getOutputStream();
-        while ((len = in.read(buf)) > 0) {
-            //向客户端输出，实际是把数据存放在response中，然后web服务器再去response中读取
-            out.write(buf, 0, len);
-        }
-        }catch (Exception e){
+            in = new FileInputStream(path); //获取文件的流
+            int len = 0;
+            //缓存作用
+            byte buf[] = new byte[1024];
+            //输出流
+            out = response.getOutputStream();
+            while ((len = in.read(buf)) > 0) {
+                //向客户端输出，实际是把数据存放在response中，然后web服务器再去response中读取
+                out.write(buf, 0, len);
+            }
+        } catch (Exception e) {
             e.printStackTrace();
             return;
-        }finally {
-            if(in!=null){
+        } finally {
+            if (in != null) {
                 in.close();
             }
             if (out != null) {
@@ -120,8 +111,10 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
             }
         }
     }
+
     /**
      * 通过txt文件批量上传
+     *
      * @param path
      * @param table
      * @param suffix
@@ -131,7 +124,8 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
      * @date 2019/9/9 14:08
      */
 
-    public int batchUpdate(String path,String table,String suffix) throws Exception {
+    @Override
+    public int batchUpdate(String path, String table, String suffix) throws Exception {
         StringBuffer strRead = new StringBuffer("insert into " + table + " values");
         //读取文本行数
         int count = 0;
@@ -179,17 +173,18 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
             return 0;
         } finally {
             //读取文本条数>插入条数时，最后执行一次批量插入
-            if(count>inCount){
+            if (count > inCount) {
                 baseDao.batchUpdate(strRead.substring(0, strRead.length() - 1));
             }
             if (is != null) {
                 is.close();
             }
-            if (reader!=null){
+            if (reader != null) {
                 reader.close();
             }
         }
     }
+
     @Override
     public int uploadMore(MultipartFile[] myfiles, HttpServletRequest request) {
 
@@ -199,17 +194,17 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
 //            String userId = request.getParameter("userId");
             String resource = request.getParameter("resource");
             String suffix = request.getParameter("suffix");
-            String prefix=ParamDef.findFileByName("prefix");
+            String prefix = ParamDef.findFileByName("prefix");
 //            String image=".JPEG|.jpeg|.JPG|.jpg|.GIF|.gif|.BMP|.bmp|.PNG|.png";
 //            String
-            if ("app".equals(resource)){
-                prefix= FileConfig.prefixApp;
+            if ("app".equals(resource)) {
+                prefix = FileConfig.prefixApp;
                 //文档也放在img文件夹中
-            }else if ("img".equals(resource)){
-                prefix= FileConfig.prefixImg;
+            } else if ("img".equals(resource)) {
+                prefix = FileConfig.prefixImg;
             }
-            String path=null;
-            int count=0;
+            String path = null;
+            int count = 0;
             for (MultipartFile file : myfiles) {
                 count++;
                 if (file.isEmpty()) {
@@ -224,8 +219,8 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
 //                        path= prefix+"/img"+ParamDef.findFileByName("suffixImage");
 //                        copyFile(path,file,null,originalFilename);
 //                    }else {
-                        path= prefix+ File.separator+suffix;
-                        copyFile(path,file,null,originalFilename);
+                    path = prefix + File.separator + suffix;
+                    copyFile(path, file, null, originalFilename);
 //                    }
                 }
 
@@ -240,49 +235,51 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
 
     /**
      * 根据code回复页面
+     *
      * @param response
      * @param code
      * @throws Exception
      */
     @Override
-    public void response(HttpServletResponse response, int code) throws Exception{
-        JSONObject jsonObject=new JSONObject();
+    public void response(HttpServletResponse response, int code) throws Exception {
+        JSONObject jsonObject = new JSONObject();
 
-        switch (code){
+        switch (code) {
             case -1:
-                jsonObject.put("sign","fail");
-                jsonObject.put("desc","提交失败");
-                jsonObject.put("code",code);
+                jsonObject.put("sign", "fail");
+                jsonObject.put("desc", "提交失败");
+                jsonObject.put("code", code);
                 break;
             case 0:
-                jsonObject.put("sign","fail");
-                jsonObject.put("desc","文件未上传");
-                jsonObject.put("code",code);
+                jsonObject.put("sign", "fail");
+                jsonObject.put("desc", "文件未上传");
+                jsonObject.put("code", code);
                 break;
             default:
-                jsonObject.put("sign","success");
-                jsonObject.put("desc","提交成功");
-                jsonObject.put("code",code);
+                jsonObject.put("sign", "success");
+                jsonObject.put("desc", "提交成功");
+                jsonObject.put("code", code);
                 break;
         }
-        String json=jsonObject.toString();
-        logger.info("--回复类容为："+json);
+        String json = jsonObject.toString();
+        logger.info("--回复类容为：" + json);
         ResponseUtil.responseJson(response, json);
 
     }
+
     @Override
     //文件转储
-    public void copyFile(String Path, MultipartFile myfile, String userId, String originalFilename) throws Exception{
+    public void copyFile(String Path, MultipartFile myfile, String userId, String originalFilename) throws Exception {
 
         File file = new File(Path);
-        logger.info("path "+Path);
+        logger.info("path " + Path);
         System.out.println(Path);
         if (!file.exists()) {
             file.mkdirs();
         }
-        String newFileName=myfile.getOriginalFilename();
-        if (userId!=null){
-            newFileName = userId+myfile.getOriginalFilename();
+        String newFileName = myfile.getOriginalFilename();
+        if (userId != null) {
+            newFileName = userId + myfile.getOriginalFilename();
         }
         // 这里不必处理IO流关闭的问题，因为FileUtils.copyInputStreamToFile()方法内部会自动把用到的IO流关掉
 //
@@ -291,92 +288,107 @@ public class IFileServiceImpl extends MyBaseServiceImpl implements IFileService 
 //        String suffix = originalFilename.substring(index);
         //生成文件 文件地址+文件名
         FileUtils.copyInputStreamToFile(myfile.getInputStream(),
-                new File(Path,newFileName ));
+                new File(Path, newFileName));
         System.out.println(newFileName);
         System.out.println("上传成功");
     }
 
-    @Override
-    public void findFileUnqualified() throws Exception {
-        long start = System.currentTimeMillis();
-//        List<Map<String, Object>> list = findList("select id,idHandleImgUrl  ", " from " + TableList.USER + " where idHandleImgUrl is not null and idHandleImgUrl<>'' and isAuth='T' and idHandleImgUrl<>'user/headImg/z192.png' ");
-//        List<Map<String, Object>> list = findList("select id,idHandleImgUrl  ", " from " + TableList.USER + " where failReason between '55' and '60' ");
-        List<Map<String, Object>> list = findList("select id,idHandleImgUrl  ", " from " + TableList.USER +" where id <100");
-        String pic64_1;
-        RetMsg retMsg;
-//        StringBuffer str = new StringBuffer("(");
-        String inPath = null;
-        List maplist = new LinkedList<>();
-        for (Map<String, Object> map : list) {
-            try {
-                String idHandleImgUrl = map.get("idHandleImgUrl").toString();
-                inPath = ImageConfig.imageSaveDir + idHandleImgUrl;
-                pic64_1 = FilesUtils.ImageToBase64ByLocal(inPath);
-
-                retMsg = FaceModuleUtil.buildFaceModel(pic64_1, 1,ImageConfig.imageSaveDir+"照片间距/",idHandleImgUrl.substring(idHandleImgUrl.lastIndexOf("/")+1));
-//                FaceModuleUtil.cutFacePic2Base64(HJFaceModel hjFaceModel, String originPic)
-//                if (retMsg.getResult_code() < 0) {
-                    maplist.add(new Object[]{retMsg.getResult_code() + 60, map.get("id")});
-//                        String newFileName="id："+map.get("id")+"眼间距："+(retMsg.getResult_code() + 60)+"_"+idHandleImgUrl.substring(idHandleImgUrl.lastIndexOf("/")+1);
-
-//                        FilesUtils.nioCopy(inPath,ImageConfig.imageSaveDir+"照片间距/"+newFileName);
-//                    str.append(map.get("id")).append(",");
-//                }
-            } catch (Exception e) {
-                logger.error("图片地址错误：{}", e);
-                logger.info(inPath);
-            }
-        }
-        int count=0;
-//        if(list.size()>0){
-//            str.deleteCharAt(str.length() - 1);
-//            str.append(")");
-//            String s = String.valueOf(str);
-//            System.out.println(s);
+//    @Override
+//    public void findFileUnqualified() throws Exception {
+//        long start = System.currentTimeMillis();
+////        List<Map<String, Object>> list = findList("select id,idHandleImgUrl  ", " from " + TableList.USER + " where idHandleImgUrl is not null and idHandleImgUrl<>'' and isAuth='T' and idHandleImgUrl<>'user/headImg/z192.png' ");
+////        List<Map<String, Object>> list = findList("select id,idHandleImgUrl  ", " from " + TableList.USER + " where failReason between '55' and '60' ");
+//        List<Map<String, Object>> list = findList("select id,idHandleImgUrl ,realName ", " from " + TableList.USER + " where id in(1564,2159,\n" +
+//                "        2161,\n" +
+//                "        2163,\n" +
+//                "        2479,\n" +
+//                "        2473,\n" +
+//                "        2658,\n" +
+//                "        2427,\n" +
+//                "        2428,\n" +
+//                "        2432,\n" +
+//                "        2100,\n" +
+//                "        2326,2037,2803,2244,1517,1298,2768)");
+//        String pic64_1;
+//        RetMsg retMsg;
+////        StringBuffer str = new StringBuffer("(");
+//        String inPath = null;
+//        List maplist = new LinkedList<>();
+//        for (Map<String, Object> map : list) {
+//            try {
+//                String idHandleImgUrl = map.get("idHandleImgUrl").toString();
+//                inPath = "http://47.98.205.206/imgserver/" + idHandleImgUrl;
+//                byte[] imageFromNetByUrl = FilesUtils.getImageFromNetByUrl(inPath);
+//                pic64_1 = Base64.encodeBase64String(imageFromNetByUrl);
+//                String before = idHandleImgUrl.substring(0, idHandleImgUrl.lastIndexOf("/"));
+//                String after = idHandleImgUrl.substring(idHandleImgUrl.lastIndexOf("/") + 1);
+//                File fileFromBytes = FilesUtils.getFileFromBytes(imageFromNetByUrl, ImageConfig.imageSaveDir + before + "/", after);
+//
+//                retMsg = FaceModuleUtil.buildFaceModel(pic64_1, 1, ImageConfig.imageSaveDir + "照片间距/", idHandleImgUrl.substring(idHandleImgUrl.lastIndexOf("/") + 1));
+////                FaceModuleUtil.cutFacePic2Base64(HJFaceModel hjFaceModel, String originPic)
+////                if (retMsg.getResult_code() < 0) {
+//                maplist.add(new Object[]{retMsg.getResult_code() + 45, map.get("id")});
+//                String realName = map.get("realName").toString();
+//
+//                String newFileName = "id" + map.get("id") + "眼间距" + (retMsg.getResult_code() + 45) + "_name" + realName + "_" + idHandleImgUrl.substring(idHandleImgUrl.lastIndexOf("/") + 1);
+//
+//                FilesUtils.nioCopy(ImageConfig.imageSaveDir + idHandleImgUrl, ImageConfig.imageSaveDir + "照片间距/" + newFileName);
+////                    str.append(map.get("id")).append(",");
+////                }
+//            } catch (Exception e) {
+//                logger.error("图片地址错误：{}", e);
+//                logger.info(inPath);
+//            }
 //        }
-        if (maplist.size() > 1) {
-//            str.deleteCharAt(str.length() - 1);
-//            str.append(")");
-//            String s = String.valueOf(str);
-//            System.out.println(s);
-            String sql = "update " + TableList.USER + " set failReason=? where id=?";
+//        int count = 0;
+////        if(list.size()>0){
+////            str.deleteCharAt(str.length() - 1);
+////            str.append(")");
+////            String s = String.valueOf(str);
+////            System.out.println(s);
+////        }
+//        if (maplist.size() > 1) {
+////            str.deleteCharAt(str.length() - 1);
+////            str.append(")");
+////            String s = String.valueOf(str);
+////            System.out.println(s);
+//            String sql = "update " + TableList.USER + " set failReason=? where id=?";
+//
+//            int[] ints = jdbcTemplate.batchUpdate(sql, maplist);
+//            count = ints[0];
+////            int update = deleteOrUpdate("update " + TableList.USER + " set failReason='眼间距小于60',isAuth='F' where id in" + s);
+////					logger.debug("pic64_1:\n" + pic64_1);}
+//            //创建人脸模型
+//        }
+//        long end = System.currentTimeMillis();
+//        System.out.println("耗时" + (end - start));
+//        logger.info(count);
+//    }
 
-            int[] ints = jdbcTemplate.batchUpdate(sql, maplist);
-            count= ints[0];
-//            int update = deleteOrUpdate("update " + TableList.USER + " set failReason='眼间距小于60',isAuth='F' where id in" + s);
-//					logger.debug("pic64_1:\n" + pic64_1);}
-            //创建人脸模型
-        }
-        long end = System.currentTimeMillis();
-        System.out.println("耗时"+(end-start));
-        logger.info(count);
-    }
-    @Override
-    public void test(){
-        String pic64_1;
-        RetMsg retMsg = null;
-//        StringBuffer str = new StringBuffer("(");
-        String inPath = null;
-        Path path= Paths.get(ImageConfig.imageSaveDir+"下发失败图片");
-        //第二个参数必须用"*"开头，第二个参数是非必输的
-        try (DirectoryStream<Path> entries= Files.newDirectoryStream(path)){
-            for (Path entity:entries){
-                System.out.println(entity.getFileName());
-                inPath = ImageConfig.imageSaveDir + "下发失败图片/"+entity.getFileName();
-                pic64_1 = FilesUtils.ImageToBase64ByLocal(inPath);
-                retMsg = FaceModuleUtil.buildFaceModel(pic64_1, 1);
-                if((retMsg.getResult_code() + 60)>=54&&(retMsg.getResult_code() + 60)<60){
-                String s = entity.getFileName() + "间距" + (retMsg.getResult_code() + 60)+".jpg";
-
-                FilesUtils.nioCopy(inPath,ImageConfig.imageSaveDir+"照片间距1/"+s);
-                }
-            }
-        }catch (Exception e){
-        e.printStackTrace();
-        }
-    }
-
-
+//    @Override
+//    public void test() {
+//        String pic64_1;
+//        RetMsg retMsg = null;
+////        StringBuffer str = new StringBuffer("(");
+//        String inPath = null;
+//        Path path = Paths.get(ImageConfig.imageSaveDir + "下发失败图片");
+//        //第二个参数必须用"*"开头，第二个参数是非必输的
+//        try (DirectoryStream<Path> entries = Files.newDirectoryStream(path)) {
+//            for (Path entity : entries) {
+//                System.out.println(entity.getFileName());
+//                inPath = ImageConfig.imageSaveDir + "下发失败图片/" + entity.getFileName();
+//                pic64_1 = FilesUtils.ImageToBase64ByLocal(inPath);
+//                retMsg = FaceModuleUtil.buildFaceModel(pic64_1, 1);
+//                if ((retMsg.getResult_code() + 60) >= 54 && (retMsg.getResult_code() + 60) < 60) {
+//                    String s = entity.getFileName() + "间距" + (retMsg.getResult_code() + 60) + ".jpg";
+//
+//                    FilesUtils.nioCopy(inPath, ImageConfig.imageSaveDir + "照片间距1/" + s);
+//                }
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
 //    }
